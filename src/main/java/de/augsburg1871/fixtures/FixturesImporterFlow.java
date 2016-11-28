@@ -22,6 +22,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.annotation.Filter;
@@ -41,8 +42,12 @@ public class FixturesImporterFlow {
 
 	private final Log logger = LogFactory.getLog(FixturesImporterFlow.class);
 
+	// @Value("#{'${fixtures.public.valid.teams}'.split(',')}")
+
 	@Bean
-	IntegrationFlow readFile() {
+	IntegrationFlow readFile(
+			@Value("#{'${fixtures.public.valid.teams}'.split(',')}") final List<String> teamsToImport) {
+
 		return IntegrationFlows.from(Files.inboundAdapter(new File("src/main/resources"))
 				.patternFilter("*_Regionsspielplan.csv").preventDuplicates(), c -> c.poller(Pollers.fixedDelay(1000)))
 				.handle((p, h) -> {
@@ -61,7 +66,7 @@ public class FixturesImporterFlow {
 				})
 				.split()
 				.transform(new CSVRecordToPojoTransformer())
-				.filter(new CsvLineFilter())
+				.filter(new CsvLineFilter(teamsToImport))
 				// TODO: write to db
 				.handle(m -> System.out.println(LocalDateTime.now() + " -- " + m.getPayload()))
 				.get();
@@ -69,8 +74,11 @@ public class FixturesImporterFlow {
 
 	public static class CsvLineFilter {
 
-		private final List<String> teamsToImport = Lists.newArrayList("Augsburg 1871", "Augsburg 1871 II",
-				"SG Augsburg-Gersthofen");
+		private final List<String> teamsToImport;
+
+		public CsvLineFilter(final List<String> teamsToImport) {
+			this.teamsToImport = teamsToImport;
+		}
 
 		@Filter
 		public boolean isValid(final Fixture fixture) {
