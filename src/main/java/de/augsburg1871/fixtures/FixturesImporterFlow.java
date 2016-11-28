@@ -5,49 +5,65 @@ import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
 import static java.time.temporal.ChronoField.YEAR;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.annotation.Filter;
-import org.springframework.integration.annotation.ServiceActivator;
-import org.springframework.integration.annotation.Splitter;
 import org.springframework.integration.annotation.Transformer;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.core.Pollers;
 import org.springframework.integration.dsl.file.Files;
-import org.springframework.integration.support.MessageBuilder;
-import org.springframework.messaging.Message;
-import org.springframework.util.CollectionUtils;
 
 import com.google.common.collect.Lists;
 
-import de.augsburg1871.fixtures.exceptions.MissingMandatoryColumnException;
 import de.augsburg1871.fixtures.persistence.model.Fixture;
 import de.augsburg1871.fixtures.persistence.model.Fixture.FixtureBuilder;
 
 @Configuration
 public class FixturesImporterFlow {
 
+	private final Log logger = LogFactory.getLog(FixturesImporterFlow.class);
+
 	@Bean
 	IntegrationFlow readFile() {
-		return IntegrationFlows.from(Files.inboundAdapter(new File("C:\\Users\\Benni\\Downloads\\read"))
+		return IntegrationFlows.from(Files.inboundAdapter(new File("src/main/resources"))
 				.patternFilter("*_Regionsspielplan.csv").preventDuplicates(), c -> c.poller(Pollers.fixedDelay(1000)))
-				.handle(new ColumnDetector())
-				.split(new CSVSplitter())
-				.transform(new CsvToPojoTransformer())
+				.handle((p, h) -> {
+					try {
+						final FileInputStream fileInputStream = new FileInputStream((File) p);
+						final Reader reader = new InputStreamReader(fileInputStream, StandardCharsets.ISO_8859_1);
+						return CSVFormat.EXCEL.withFirstRecordAsHeader()
+								.withIgnoreEmptyLines()
+								.withDelimiter(';')
+								.parse(reader)
+								.getRecords();
+					} catch (final IOException e) {
+						logger.error("Datei konnte nicht verarbeitet werden.", e);
+					}
+					return Lists.<CSVRecord>newArrayList();
+				})
+				.split()
+				.transform(new CSVRecordToPojoTransformer())
 				.filter(new CsvLineFilter())
-				.handle(m -> System.out.println(m.getPayload()))
+				// TODO: write to db
+				.handle(m -> System.out.println(LocalDateTime.now() + " -- " + m.getPayload()))
 				.get();
 	}
 
@@ -60,88 +76,35 @@ public class FixturesImporterFlow {
 		public boolean isValid(final Fixture fixture) {
 
 			if (teamsToImport.contains(fixture.getHome())) {
-				// System.out.println(fixture + "VALID");
 				return true;
 			} else if (teamsToImport.contains(fixture.getAway())) {
-				// System.out.println(fixture + "VALID");
 				return true;
 			}
 
-			// System.out.println(fixture + "INVALID");
 			return false;
 		}
 
 	}
 
-	public static class CsvToPojoTransformer {
+	public static class CSVRecordToPojoTransformer {
 
 		@Transformer
-		public Fixture transform(final String line) {
-			final List<String> columns = Arrays.asList(line.split(";"));
+		public Fixture transform(final CSVRecord record) {
 
-			final LocalDate date = LocalDate.parse(columns.get(1), new DateTimeFormatterBuilder()
+			final LocalDate date = LocalDate.parse(record.get("Datum"), new DateTimeFormatterBuilder()
 					.appendValue(DAY_OF_MONTH, 2)
 					.appendLiteral('.')
 					.appendValue(MONTH_OF_YEAR, 2)
 					.appendLiteral('.')
 					.appendValue(YEAR, 4)
 					.toFormatter(Locale.GERMANY));
-			final LocalTime time = LocalTime.parse(columns.get(2), DateTimeFormatter.ISO_LOCAL_TIME);
+			final LocalTime time = LocalTime.parse(record.get("Zeit"), DateTimeFormatter.ISO_LOCAL_TIME);
 
 			return new FixtureBuilder()
 					.localDateTime(LocalDateTime.of(date, time))
-					.home(columns.get(8))
-					.away(columns.get(9))
+					.home(record.get("Heimmannschaft"))
+					.away(record.get("Gastmannschaft"))
 					.build();
-		}
-
-	}
-
-	public static class CSVSplitter {
-
-		private int linesToSkip = 0;
-		private boolean includeHeader = false;
-
-		public CSVSplitter skipLines(final int linesToSkip) {
-			this.linesToSkip = linesToSkip;
-			return this;
-		}
-
-		public CSVSplitter includeHeader(final boolean includeHeader) {
-			this.includeHeader = includeHeader;
-			return this;
-		}
-
-		@Splitter
-		public List<String> split(final File file) throws IOException {
-			final List<String> lines = java.nio.file.Files.readAllLines(file.toPath(), StandardCharsets.ISO_8859_1);
-			lines.remove(0);
-			return lines;
-		}
-
-	}
-
-	public static class ColumnDetector {
-
-		@ServiceActivator(requiresReply = "true")
-		public Message<File> hasMandatoryColumns(final File file) throws IOException {
-			final List<String> mandatoryColumns = Lists.newArrayList("Tag", "Datum", "Heimmannschaft",
-					"Gastmannschaft");
-			final Message<File> message = MessageBuilder.withPayload(file).build();
-			final List<String> lines = java.nio.file.Files.readAllLines(file.toPath(), StandardCharsets.ISO_8859_1);
-
-			if (CollectionUtils.isEmpty(lines)) {
-				return message;
-			}
-
-			final List<String> readHeadlines = Arrays.asList(lines.get(0).split(";"));
-			for (final String mandatoryColumn : mandatoryColumns) {
-				if (!readHeadlines.contains(mandatoryColumn)) {
-					throw new MissingMandatoryColumnException(mandatoryColumn);
-				}
-			}
-
-			return message;
 		}
 
 	}
