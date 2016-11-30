@@ -1,22 +1,12 @@
 package de.augsburg1871.fixtures.persistence.model;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.springframework.core.style.ToStringCreator;
+
 public class Referee {
 
 	private String name;
 	private String club;
-
-	private Referee() {
-
-	}
-
-	// public Referee(final String name) {
-	// this.name = name;
-	// }
-	//
-	// public Referee(final String name, final String club) {
-	// this.name = name;
-	// this.club = club;
-	// }
 
 	public String getName() {
 		return name;
@@ -32,6 +22,33 @@ public class Referee {
 
 	public void setClub(final String club) {
 		this.club = club;
+	}
+
+	public static RefereeBuilder builder() {
+		return new RefereeBuilder();
+	}
+
+	@Override
+	public String toString() {
+		return new ToStringCreator(this).append(name).toString();
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		if (obj == null) {
+			return false;
+		}
+		if (obj == this) {
+			return true;
+		}
+		if (obj.getClass() != getClass()) {
+			return false;
+		}
+		final Referee rhs = (Referee) obj;
+		return new EqualsBuilder()
+				.append(name, rhs.getName())
+				.append(club, rhs.getClub())
+				.isEquals();
 	}
 
 	public static class RefereeBuilder {

@@ -30,17 +30,13 @@ public class Game {
 	private Result resultHalfTime;
 	private List<Referee> referees;
 
-	// private Game() {
-	//
-	// }
+	public String getId() {
+		return id;
+	}
 
-	// public long getId() {
-	// return id;
-	// }
-	//
-	// public void setId(final long id) {
-	// this.id = id;
-	// }
+	public void setId(final String id) {
+		this.id = id;
+	}
 
 	public LocalDateTime getLocalDateTime() {
 		return localDateTime;

@@ -11,7 +11,6 @@ import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.core.Pollers;
 import org.springframework.integration.dsl.file.Files;
 
-import de.augsburg1871.fixtures.CSVRecordToGameTransformer;
 import de.augsburg1871.fixtures.flow.CSVReader;
 import de.augsburg1871.fixtures.repository.GameRepository;
 
@@ -27,7 +26,7 @@ public class DeltaUpdateFlow {
 				.patternFilter("*_Regionsspielplan.csv").preventDuplicates(), c -> c.poller(Pollers.fixedDelay(1000)))
 				.handle(new CSVReader())
 				.split()
-				.handle(new CSVRecordToGameTransformer())
+				.handle(new CSVRecordToGameTransformer(currentSeason))
 				.filter(new GameByTeamsFilter(teamsToImport))
 				.handle(new UpsertHandler(gameRepository, currentSeason))
 				.get();

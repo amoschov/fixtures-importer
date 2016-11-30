@@ -26,16 +26,17 @@ public class UpsertHandler {
 	@ServiceActivator
 	public void upsert(final Game game) {
 		final Collection<Game> persistentGames = gameRepository
-				.findByGameNumberAndSeasonAndGymNumber(game.getGameNumber(), currentSeason,
-						game.getGymNumber());
+				.findByGameNumberAndSeasonAndGymNumber(game.getGameNumber(), currentSeason, game.getGymNumber());
 
 		if (CollectionUtils.isEmpty(persistentGames)) {
 			gameRepository.save(game);
+			log.info("INSERT " + game);
 			return;
 		}
 
 		if (persistentGames.size() == 1) {
 			gameRepository.save(GameMerger.merge(persistentGames.iterator().next(), game));
+			log.info("UPDATE " + game);
 			return;
 		}
 
