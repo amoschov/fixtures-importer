@@ -9,6 +9,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.style.ToStringCreator;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "games")
@@ -18,8 +19,10 @@ public class Game {
 	private String id;
 	private LocalDateTime date;
 	private String gameNumber;
+	@DBRef
 	private Club homeClub;
 	private String home;
+	@DBRef
 	private Club awayClub;
 	private String away;
 	private String gymNumber;

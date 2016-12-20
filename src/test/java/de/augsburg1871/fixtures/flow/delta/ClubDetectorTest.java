@@ -25,6 +25,15 @@ public class ClubDetectorTest {
 	}
 
 	@Test
+	public void matchAliasStartsWithClubName() {
+		final Club club = ClubBuilder.ofName("TSV 1871 Augsburg").build();
+		final Club foundClub = new ClubDetector(Lists.newArrayList(club)).findClub("TSV 1871 Augsburg II");
+
+		assertThat(foundClub, is(sameInstance(club)));
+		assertThat(foundClub.getName(), is(equalTo("TSV 1871 Augsburg")));
+	}
+
+	@Test
 	public void mappingStartsWithAlias() {
 		final Club club = ClubBuilder.ofName("TSV 1871 Augsburg").nuLigaMappings("Augsburg 1871").build();
 
@@ -42,6 +51,20 @@ public class ClubDetectorTest {
 		final Club foundClub = detector.findClub("1871");
 		assertThat(foundClub, is(sameInstance(club)));
 		assertThat(foundClub.getName(), is(equalTo("TSV 1871 Augsburg")));
+	}
+
+	@Test
+	public void aliasContainsMapping() {
+		final Club club = ClubBuilder.ofName("TSV 1871 Augsburg").nuLigaMappings("Augsburg 1871").build();
+
+		final ClubDetector detector = new ClubDetector(Lists.newArrayList(club));
+		final Club foundClub = detector.findClub("Augsburg 1871 II");
+		assertThat(foundClub, is(sameInstance(club)));
+		assertThat(foundClub.getName(), is(equalTo("TSV 1871 Augsburg")));
+	}
+
+	public static void main(final String[] args) {
+		System.out.println("Augsburg 1871 II".contains("Augsburg 1871"));
 	}
 
 	@Test

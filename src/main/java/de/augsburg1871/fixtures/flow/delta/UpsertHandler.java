@@ -8,7 +8,6 @@ import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.util.CollectionUtils;
 
 import de.augsburg1871.fixtures.persistence.model.Game;
-import de.augsburg1871.fixtures.persistence.model.GameMerger;
 import de.augsburg1871.fixtures.service.GamesService;
 
 public class UpsertHandler {
@@ -35,7 +34,10 @@ public class UpsertHandler {
 		}
 
 		if (persistentGames.size() == 1) {
-			gameService.save(GameMerger.merge(persistentGames.iterator().next(), game));
+			// gameService.save(GameMerger.merge(persistentGames.iterator().next(),
+			// game));
+			game.setId(persistentGames.iterator().next().getId());
+			gameService.save(game);
 			log.info("UPDATE " + game);
 			return;
 		}

@@ -11,21 +11,21 @@ import org.springframework.integration.dsl.core.Pollers;
 import org.springframework.integration.dsl.file.Files;
 
 import de.augsburg1871.fixtures.flow.CSVReader;
+import de.augsburg1871.fixtures.service.ClubService;
 import de.augsburg1871.fixtures.service.GamesService;
 
 @Configuration
 public class DeltaUpdateFlow {
 
 	@Bean
-	IntegrationFlow readFile(
-			final GamesService gameService,
+	IntegrationFlow readFile(final ClubService clubService, final GamesService gameService,
 			@Value("${fixtures.current-season}") final String currentSeason) {
 		return IntegrationFlows.from(Files.inboundAdapter(new File("src/main/resources"))
 				.patternFilter("*_Regionsspielplan.csv").preventDuplicates(), c -> c.poller(Pollers.fixedDelay(1000)))
 				.handle(new CSVReader())
 				.split()
 				.filter(new LeagueRelayFilter())
-				.transform(new CSVRecordToGameTransformer(currentSeason))
+				.transform(new CSVRecordToGameTransformer(clubService.findAll(), currentSeason))
 				.handle(new UpsertHandler(gameService, currentSeason))
 				.get();
 	}

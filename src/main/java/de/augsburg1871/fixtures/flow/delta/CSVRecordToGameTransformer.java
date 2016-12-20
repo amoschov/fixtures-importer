@@ -17,10 +17,12 @@ import java.util.regex.Pattern;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.integration.annotation.Transformer;
+import org.springframework.util.CollectionUtils;
 
 import com.google.common.collect.Lists;
 
 import de.augsburg1871.fixtures.flow.LeagueMappings;
+import de.augsburg1871.fixtures.persistence.model.Club;
 import de.augsburg1871.fixtures.persistence.model.Game;
 import de.augsburg1871.fixtures.persistence.model.Game.GameBuilder;
 import de.augsburg1871.fixtures.persistence.model.LeagueMapping;
@@ -30,8 +32,10 @@ import de.augsburg1871.fixtures.persistence.model.Result;
 public class CSVRecordToGameTransformer {
 
 	private final String season;
+	private final ClubDetector clubDetector;
 
-	public CSVRecordToGameTransformer(final String season) {
+	public CSVRecordToGameTransformer(final List<Club> clubs, final String season) {
+		this.clubDetector = new ClubDetector(clubs);
 		this.season = season;
 	}
 
@@ -45,6 +49,8 @@ public class CSVRecordToGameTransformer {
 		final String liga = record.get("Liga");
 
 		final LeagueMapping mapping = LeagueMappings.findMapping(liga, staffel);
+		final Club homeClub = clubDetector.findClub(home);
+		final Club awayClub = clubDetector.findClub(away);
 
 		final Result result = Result.builder().result(extractResult(record.get("Ergebnis"))).build();
 		final Result resultHalfTime = Result.builder().result(extractResult(record.get("Halbzeitergebnis"))).build();
@@ -59,6 +65,8 @@ public class CSVRecordToGameTransformer {
 		final Game game = GameBuilder.with(LocalDateTime.of(date, time), home, away)
 				.gameNumber(record.get("Spielnummer"))
 				.gymNumber(record.get("Hallennummer"))
+				.homeClub(homeClub)
+				.awayClub(awayClub)
 				.season(season)
 				.team(mapping == null ? null : mapping.getTeam())
 				.classOfAge(mapping == null ? null : mapping.getTeam().getClassOfAge())
@@ -78,7 +86,7 @@ public class CSVRecordToGameTransformer {
 			}
 			referees.add(Referee.builder().name(data[0]).club(data[1]).build());
 		}
-		return referees;
+		return CollectionUtils.isEmpty(referees) ? null : referees;
 	}
 
 	private String extractResult(final String result) {

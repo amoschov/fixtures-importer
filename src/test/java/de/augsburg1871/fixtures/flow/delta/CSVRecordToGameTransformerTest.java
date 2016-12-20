@@ -11,8 +11,10 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.csv.CSVRecord;
+import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -20,6 +22,8 @@ import org.springframework.core.io.Resource;
 
 import de.augsburg1871.fixtures.flow.CSVReader;
 import de.augsburg1871.fixtures.persistence.model.ClassOfAge;
+import de.augsburg1871.fixtures.persistence.model.Club;
+import de.augsburg1871.fixtures.persistence.model.Club.ClubBuilder;
 import de.augsburg1871.fixtures.persistence.model.Game;
 import de.augsburg1871.fixtures.persistence.model.Referee;
 import de.augsburg1871.fixtures.persistence.model.Result;
@@ -43,7 +47,9 @@ public class CSVRecordToGameTransformerTest {
 
 	@Test
 	public void transform() {
-		final Game game = new CSVRecordToGameTransformer("2016/17").transform(csvRecords.iterator().next());
+		final List<Club> newArrayList = Lists.newArrayList(ClubBuilder.ofName("TSV 1871 Augsburg").build());
+		final Game game = new CSVRecordToGameTransformer(newArrayList, "2016/17")
+				.transform(csvRecords.iterator().next());
 		assertThat(game, is(notNullValue()));
 		assertThat(game.getDate(), is(equalTo(LocalDateTime.of(2016, Month.OCTOBER, 9, 13, 00))));
 		assertThat(game.getGymNumber(), is(equalTo("250004")));
