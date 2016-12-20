@@ -83,6 +83,10 @@ public class Club {
 		private String nuLigaNr;
 		private final List<String> nuLigaMappings = Lists.newArrayList();
 
+		public static ClubBuilder ofName(final String name) {
+			return new ClubBuilder().name(name);
+		}
+
 		public ClubBuilder id(final String id) {
 			this.id = id;
 			return this;

@@ -18,7 +18,9 @@ public class Game {
 	private String id;
 	private LocalDateTime date;
 	private String gameNumber;
+	private Club homeClub;
 	private String home;
+	private Club awayClub;
 	private String away;
 	private String gymNumber;
 
@@ -64,12 +66,28 @@ public class Game {
 		this.home = home;
 	}
 
+	public Club getHomeClub() {
+		return homeClub;
+	}
+
+	public void setHomeClub(final Club homeClub) {
+		this.homeClub = homeClub;
+	}
+
 	public String getAway() {
 		return away;
 	}
 
 	public void setAway(final String away) {
 		this.away = away;
+	}
+
+	public Club getAwayClub() {
+		return awayClub;
+	}
+
+	public void setAwayClub(final Club awayClub) {
+		this.awayClub = awayClub;
 	}
 
 	public String getGymNumber() {
@@ -151,7 +169,9 @@ public class Game {
 		private LocalDateTime localDateTime;
 		private String gameNumber;
 		private String season;
+		private Club homeClub;
 		private String home;
+		private Club awayClub;
 		private String away;
 		private String gymNumber;
 		private List<Referee> referees;
@@ -185,8 +205,18 @@ public class Game {
 			return this;
 		}
 
+		public GameBuilder homeClub(final Club homeClub) {
+			this.homeClub = homeClub;
+			return this;
+		}
+
 		public GameBuilder away(final String away) {
 			this.away = away;
+			return this;
+		}
+
+		public GameBuilder awayClub(final Club awayClub) {
+			this.awayClub = awayClub;
 			return this;
 		}
 
@@ -237,7 +267,9 @@ public class Game {
 			game.setSex(this.sex);
 			game.setTeam(team);
 			game.setHome(this.home);
+			game.setHomeClub(this.homeClub);
 			game.setAway(this.away);
+			game.setAwayClub(this.awayClub);
 			game.setGameNumber(this.gameNumber);
 			game.setGymNumber(this.gymNumber);
 			game.setReferees(this.referees);
