@@ -83,7 +83,7 @@ public class Result {
 		}
 
 		public ResultBuilder result(final String result, final char separator) {
-			if (StringUtils.isEmpty(result)) {
+			if (StringUtils.isBlank(result)) {
 				return this;
 			}
 

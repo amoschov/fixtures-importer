@@ -11,6 +11,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
@@ -58,9 +60,9 @@ public class CSVRecordToGameTransformer {
 				.gameNumber(record.get("Spielnummer"))
 				.gymNumber(record.get("Hallennummer"))
 				.season(season)
-				.team(mapping.getTeam())
-				.classOfAge(mapping.getTeam().getClassOfAge())
-				.sex(mapping.getTeam().getSex())
+				.team(mapping == null ? null : mapping.getTeam())
+				.classOfAge(mapping == null ? null : mapping.getTeam().getClassOfAge())
+				.sex(mapping == null ? null : mapping.getTeam().getSex())
 				.result(result)
 				.resultHalfTime(resultHalfTime)
 				.referees(referees)
@@ -80,8 +82,12 @@ public class CSVRecordToGameTransformer {
 	}
 
 	private String extractResult(final String result) {
-		final String adjusted = result.substring(2, result.length() - 1);
-		if (adjusted.equals("0:0")) {
+		String adjusted = null;
+		final Matcher matcher = Pattern.compile("\\d+:\\d+").matcher(result);
+		if (matcher.find()) {
+			adjusted = matcher.group();
+		}
+		if ("0:0".equals(adjusted)) {
 			return null;
 		}
 

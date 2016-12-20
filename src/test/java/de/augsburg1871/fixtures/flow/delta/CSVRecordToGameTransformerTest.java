@@ -19,9 +19,12 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import de.augsburg1871.fixtures.flow.CSVReader;
+import de.augsburg1871.fixtures.persistence.model.ClassOfAge;
 import de.augsburg1871.fixtures.persistence.model.Game;
 import de.augsburg1871.fixtures.persistence.model.Referee;
 import de.augsburg1871.fixtures.persistence.model.Result;
+import de.augsburg1871.fixtures.persistence.model.Sex;
+import de.augsburg1871.fixtures.persistence.model.Team;
 
 public class CSVRecordToGameTransformerTest {
 
@@ -48,6 +51,9 @@ public class CSVRecordToGameTransformerTest {
 		assertThat(game.getSeason(), is(equalTo("2016/17")));
 		assertThat(game.getHome(), is(equalTo("Augsburg 1871")));
 		assertThat(game.getAway(), is(equalTo("TV Gundelfingen")));
+		assertThat(game.getTeam(), is(Team.mC));
+		assertThat(game.getClassOfAge(), is(ClassOfAge.C));
+		assertThat(game.getSex(), is(Sex.MALE));
 		assertThat(game.getResultHalfTime(), is(equalTo(Result.builder().result("7:10").build())));
 		assertThat(game.getResult(), is(equalTo(Result.builder().result(20, 19).build())));
 		assertThat(game.getReferees(), contains(
