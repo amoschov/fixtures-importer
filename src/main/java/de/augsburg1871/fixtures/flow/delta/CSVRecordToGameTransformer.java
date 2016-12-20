@@ -18,7 +18,10 @@ import org.springframework.integration.annotation.Transformer;
 
 import com.google.common.collect.Lists;
 
+import de.augsburg1871.fixtures.flow.LeagueMappings;
 import de.augsburg1871.fixtures.persistence.model.Game;
+import de.augsburg1871.fixtures.persistence.model.Game.GameBuilder;
+import de.augsburg1871.fixtures.persistence.model.LeagueMapping;
 import de.augsburg1871.fixtures.persistence.model.Referee;
 import de.augsburg1871.fixtures.persistence.model.Result;
 
@@ -32,9 +35,15 @@ public class CSVRecordToGameTransformer {
 
 	@Transformer
 	public Game transform(final CSVRecord record) {
-
 		final LocalDate date = parseDate(record.get("Datum"));
 		final LocalTime time = parseTime(record.get("Zeit"));
+		final String home = record.get("Heimmannschaft");
+		final String away = record.get("Gastmannschaft");
+		final String staffel = record.get("Staffelkurzbezeichnung");
+		final String liga = record.get("Liga");
+
+		final LeagueMapping mapping = LeagueMappings.findMapping(liga, staffel);
+
 		final Result result = Result.builder().result(extractResult(record.get("Ergebnis"))).build();
 		final Result resultHalfTime = Result.builder().result(extractResult(record.get("Halbzeitergebnis"))).build();
 
@@ -45,13 +54,13 @@ public class CSVRecordToGameTransformer {
 						new String[] { record.get(" SR C"), record.get(" Verein SR C") },
 						new String[] { record.get(" SR D"), record.get(" Verein SR D") }));
 
-		final Game game = Game.builder()
-				.localDateTime(LocalDateTime.of(date, time))
+		final Game game = GameBuilder.with(LocalDateTime.of(date, time), home, away)
 				.gameNumber(record.get("Spielnummer"))
 				.gymNumber(record.get("Hallennummer"))
 				.season(season)
-				.home(record.get("Heimmannschaft"))
-				.away(record.get("Gastmannschaft"))
+				.team(mapping.getTeam())
+				.classOfAge(mapping.getTeam().getClassOfAge())
+				.sex(mapping.getTeam().getSex())
 				.result(result)
 				.resultHalfTime(resultHalfTime)
 				.referees(referees)
@@ -71,7 +80,12 @@ public class CSVRecordToGameTransformer {
 	}
 
 	private String extractResult(final String result) {
-		return result.substring(2, result.length() - 1);
+		final String adjusted = result.substring(2, result.length() - 1);
+		if (adjusted.equals("0:0")) {
+			return null;
+		}
+
+		return adjusted;
 	}
 
 	private LocalTime parseTime(final String time) {

@@ -11,4 +11,5 @@ public class FixturesImporterApplication {
 	public static void main(final String[] args) {
 		SpringApplication.run(FixturesImporterApplication.class, args);
 	}
+
 }

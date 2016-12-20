@@ -42,7 +42,7 @@ public class CSVRecordToGameTransformerTest {
 	public void transform() {
 		final Game game = new CSVRecordToGameTransformer("2016/17").transform(csvRecords.iterator().next());
 		assertThat(game, is(notNullValue()));
-		assertThat(game.getLocalDateTime(), is(equalTo(LocalDateTime.of(2016, Month.OCTOBER, 9, 13, 00))));
+		assertThat(game.getDate(), is(equalTo(LocalDateTime.of(2016, Month.OCTOBER, 9, 13, 00))));
 		assertThat(game.getGymNumber(), is(equalTo("250004")));
 		assertThat(game.getGameNumber(), is(equalTo("20043807")));
 		assertThat(game.getSeason(), is(equalTo("2016/17")));

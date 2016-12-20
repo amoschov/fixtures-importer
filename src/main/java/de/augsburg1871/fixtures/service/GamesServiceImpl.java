@@ -1,6 +1,7 @@
 package de.augsburg1871.fixtures.service;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
@@ -22,8 +23,24 @@ public class GamesServiceImpl implements GamesService {
 	}
 
 	@Override
-	public Collection<Game> findByGameNumberAndSeason(final String gameNumber) {
-		return null;
+	public Collection<Game> findByGameNumberAndSeason(final String gameNumber, final String season) {
+		return gameRepository.findByGameNumberAndSeason(gameNumber, season);
+	}
+
+	@Override
+	public Collection<Game> findByGameNumberAndSeasonAndGymNumber(final String gameNumber, final String season,
+			final String gymNumber) {
+		return gameRepository.findByGameNumberAndSeasonAndGymNumber(gameNumber, season, gymNumber);
+	}
+
+	@Override
+	public Game save(final Game game) {
+		return gameRepository.save(game);
+	}
+
+	@Override
+	public List<Game> save(final Iterable<Game> games) {
+		return gameRepository.save(games);
 	}
 
 }

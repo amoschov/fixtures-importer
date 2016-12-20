@@ -2,6 +2,7 @@ package de.augsburg1871.fixtures.persistence.model;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.springframework.core.style.ToStringCreator;
 
@@ -82,6 +83,10 @@ public class Result {
 		}
 
 		public ResultBuilder result(final String result, final char separator) {
+			if (StringUtils.isEmpty(result)) {
+				return this;
+			}
+
 			final String[] results = result.split(String.valueOf(separator));
 			final Integer home = Integer.valueOf(results[0]);
 			final Integer away = Integer.valueOf(results[1]);
@@ -89,6 +94,10 @@ public class Result {
 		}
 
 		public Result build() {
+			if (home == null || away == null) {
+				return null;
+			}
+
 			final Result result = new Result();
 			result.setHome(home);
 			result.setAway(away);

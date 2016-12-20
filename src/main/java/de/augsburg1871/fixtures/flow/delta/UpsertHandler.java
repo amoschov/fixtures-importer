@@ -9,33 +9,33 @@ import org.springframework.util.CollectionUtils;
 
 import de.augsburg1871.fixtures.persistence.model.Game;
 import de.augsburg1871.fixtures.persistence.model.GameMerger;
-import de.augsburg1871.fixtures.repository.GameRepository;
+import de.augsburg1871.fixtures.service.GamesService;
 
 public class UpsertHandler {
 
-	Log log = LogFactory.getLog(UpsertHandler.class);
+	private final Log log = LogFactory.getLog(UpsertHandler.class);
 
-	private final GameRepository gameRepository;
+	private final GamesService gameService;
 	private final String currentSeason;
 
-	public UpsertHandler(final GameRepository gameRepository, final String currentSeason) {
-		this.gameRepository = gameRepository;
+	public UpsertHandler(final GamesService gameService, final String currentSeason) {
+		this.gameService = gameService;
 		this.currentSeason = currentSeason;
 	}
 
 	@ServiceActivator
 	public void upsert(final Game game) {
-		final Collection<Game> persistentGames = gameRepository
+		final Collection<Game> persistentGames = gameService
 				.findByGameNumberAndSeasonAndGymNumber(game.getGameNumber(), currentSeason, game.getGymNumber());
 
 		if (CollectionUtils.isEmpty(persistentGames)) {
-			gameRepository.save(game);
+			gameService.save(game);
 			log.info("INSERT " + game);
 			return;
 		}
 
 		if (persistentGames.size() == 1) {
-			gameRepository.save(GameMerger.merge(persistentGames.iterator().next(), game));
+			gameService.save(GameMerger.merge(persistentGames.iterator().next(), game));
 			log.info("UPDATE " + game);
 			return;
 		}

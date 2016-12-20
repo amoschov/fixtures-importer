@@ -1,5 +1,6 @@
 package de.augsburg1871.fixtures.persistence.model;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.springframework.core.style.ToStringCreator;
 
@@ -67,6 +68,10 @@ public class Referee {
 		}
 
 		public Referee build() {
+			if (StringUtils.isEmpty(name)) {
+				return null;
+			}
+
 			final Referee referee = new Referee();
 			referee.setName(this.name);
 			referee.setClub(this.club);
